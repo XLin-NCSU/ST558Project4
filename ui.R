@@ -13,7 +13,7 @@ library(shiny)
 fluidPage(
   
   # Application title
-  titlePanel("Old Faithful Geyser Data"),
+  titlePanel("Census Adult Income Data"),
   
   # MathJax
   withMathJax(),
@@ -129,7 +129,7 @@ fluidPage(
         sidebarPanel(
           
           # Four type of plots
-          selectInput("plottype",
+          selectInput(inputId = "plottype",
                       "Choose your plot", 
                       c("Histogram" = "hist",
                         "Bar Graph" = "bar",
@@ -140,7 +140,7 @@ fluidPage(
           # histogram - numerical var
           conditionalPanel( 
             condition = "input.plottype == 'hist'",
-            selectInput("hist_num_var",
+            selectInput(inputId = "hist_num_var",
                         "Choose the numerical variable that you want to investigate:",
                         c("Age" = "age",
                           "Years of education" = "education_num",
@@ -150,8 +150,8 @@ fluidPage(
           # histogram - categorical var comparison
           conditionalPanel( 
             condition =  "input.plottype == 'hist'",
-            selectInput("hist_cat_var",
-                        "Choose the categorical variable that you want to compare:",
+            selectInput(inputId = "hist_cat_var",
+                        label = "Choose the categorical variable that you want to compare:",
                         c("Work class" = "workclass",
                           "Marital status" = "marital_status",
                           "Occupation" = "occupation",
@@ -163,18 +163,31 @@ fluidPage(
           # histogram - row filter on income
           conditionalPanel( 
             condition =  "input.plottype == 'hist'",
-            selectInput("hist_cat_income",
-                        "filter the income level",
-                        c("<= 50K" = "<= 50K",
-                          ">50K" = ">50K"))
+            selectizeInput(inputId = "hist_cat_income", 
+                           label = "filter the income level", 
+                           selected = "<= 50K", 
+                           choices = levels(as.factor(adult$income)))
+            # selectInput("hist_cat_income",
+            #             "filter the income level",
+            #             c("<= 50K" = "<= 50K",
+            #               ">50K" = ">50K"))
+          ),
+          
+          conditionalPanel(
+            condition = "input.plottype == 'hist'",
+            sliderInput(inputId = "breakcount", 
+                        label = "Break Count", 
+                        min = 1, 
+                        max = 50, 
+                        value = 10)
           ),
           
           # bar plot - categorical var
           conditionalPanel( 
             condition =  "input.plottype == 'bar'",
-            selectInput("bar_cat_var_1",
-                        "Choose the categorical variable that you want to investigate:",
-                        c("Work class" = "workclass",
+            selectInput(inputId = "bar_cat_var_1",
+                        label = "Choose the categorical variable that you want to investigate:",
+                        choices = c("Work class" = "workclass",
                           "Marital status" = "marital_status",
                           "Occupation" = "occupation",
                           "Race" = "race",
@@ -185,9 +198,9 @@ fluidPage(
           
           conditionalPanel(
             condition =  "input.plottype == 'bar'",
-            selectInput("bar_cat_var_2",
-                        "Choose the categorical variable that you want to compare:",
-                        c("Work class" = "workclass",
+            selectInput(inputId = "bar_cat_var_2",
+                        label = "Choose the categorical variable that you want to compare:",
+                        choices = c("Work class" = "workclass",
                           "Marital status" = "marital_status",
                           "Occupation" = "occupation",
                           "Race" = "race",
@@ -200,9 +213,9 @@ fluidPage(
           # scatter plot - numerical & numerical
           conditionalPanel(
             condition = "input.plottype == 'scatter'",
-            selectInput("scatter_num_var_1",
-                        "Choose the first numerical variable that you want to investigate:",
-                        c("Age" = "age",
+            selectInput(inputId = "scatter_num_var_1",
+                        label = "Choose the first numerical variable that you want to investigate:",
+                        choices = c("Age" = "age",
                           "Years of education" = "education_num",
                           "Working hours per week" = "hours_per_week"),
                         selected = "age")
@@ -211,9 +224,9 @@ fluidPage(
           # scatter plot - numerical & numerical
           conditionalPanel(
             condition = "input.plottype == 'scatter'",
-            selectInput("scatter_num_var_2",
-                        "Choose the second numerical variable that you want to investigate:",
-                        c("Age" = "age",
+            selectInput(inputId = "scatter_num_var_2",
+                        label = "Choose the second numerical variable that you want to investigate:",
+                        choices = c("Age" = "age",
                           "Years of education" = "education_num",
                           "Working hours per week" = "hours_per_week"),
                         selected = "education_num")
@@ -222,9 +235,9 @@ fluidPage(
           # scatter plot - numerical & numerical
           conditionalPanel( 
             condition = "input.plottype == 'scatter'",
-            selectInput("scatter_cat_var",
-                        "Choose the categirical variable that you want to compare:",
-                        c("Work class" = "workclass",
+            selectInput(inputId = "scatter_cat_var",
+                        label = "Choose the categirical variable that you want to compare:",
+                        choices = c("Work class" = "workclass",
                           "Marital status" = "marital_status",
                           "Occupation" = "occupation",
                           "Race" = "race",
@@ -236,9 +249,9 @@ fluidPage(
           # box plot - numerical & categorical
           conditionalPanel(
             condition = "input.plottype == 'box'",
-            selectInput("box_num_var",
-                        "Choose the numerical variable that you want to investigate:",
-                        c("Age" = "age",
+            selectInput(inputId = "box_num_var",
+                        label = "Choose the numerical variable that you want to investigate:",
+                        choices = c("Age" = "age",
                           "Years of education" = "education_num",
                           "Working hours per week" = "hours_per_week"))
           ),
@@ -246,9 +259,9 @@ fluidPage(
           # box plot - numerical & categorical
           conditionalPanel( 
             condition = "input.plottype == 'box'",
-            selectInput("box_cat_var",
-                        "Choose the categorical variable that you want to compare:",
-                        c("Work class" = "workclass",
+            selectInput(inputId = "box_cat_var",
+                        label = "Choose the categorical variable that you want to compare:",
+                        choices = c("Work class" = "workclass",
                           "Marital status" = "marital_status",
                           "Occupation" = "occupation",
                           "Race" = "race",
@@ -262,6 +275,10 @@ fluidPage(
         
         # Show a plot of the generated distribution
         mainPanel(
+          tags$br(),
+          textOutput("datainfo"),
+          tags$br(),
+          plotOutput("dataplot")
           
         ) 
         # closing data exploration mainpanel
