@@ -21,12 +21,14 @@
   - `r shiny`
   - `r tidyverse`
   - `r caret`
+  - `r recipes`
 
 - Install packages
   ```r
   install.packages("shiny")
   install.packages("tidyverse")
   install.packages("caret")
+  install.packages("recipes")
   ```
 - Run the app
   ```r
