@@ -30,5 +30,5 @@
   ```
 - Run the app
   ```r
-  shiny::runGitHub("ST558Project4", "ST558Project4")
+  shiny::runGitHub("ST558Project4", "XLin-NCSU")
   ```
