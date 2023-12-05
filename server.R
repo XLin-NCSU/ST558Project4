@@ -80,6 +80,8 @@ shinyServer(function(input, output, session) {
     
       var <- paste(input$vars, collapse = " + ")
       form <- as.formula(paste0("income ~", var))
+      
+      withProgress(message = 'Building models...', value = 0,{
       logistic_model <- train(form,
                               data = adult_train, 
                               method = "glm",
@@ -108,6 +110,7 @@ shinyServer(function(input, output, session) {
       
       output$rf <- renderPrint({
         print(rf_model)
+      })
       })
 
   ## prediction on logistic --------------------------------------------------
