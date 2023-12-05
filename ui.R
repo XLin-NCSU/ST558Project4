@@ -1,30 +1,24 @@
-#
-# This is the user-interface definition of a Shiny web application. You can
-# run the application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
 
 library(shiny)
 
-# Define UI for application that draws a histogram
+# page setting
 fluidPage(
   
-  # Application title
-  titlePanel("Census Adult Income Data"),
+# Application title
+titlePanel("Census Adult Income Data"),
   
-  # MathJax
-  withMathJax(),
+# MathJax
+withMathJax(),
   
-  # Top level tabs
-  tabsetPanel(
+# Top level tabs
+tabsetPanel(
     type = "tabs",
-    
-    # About Tab
+# About Tab ---------------------------------------------------------------
+
     tabPanel(
       "About",
+
+## Intro -------------------------------------------------------------------
       tags$br(),
       tags$p("The purpose of this app is to predict whether income exceeds $50K/yr based on census data. The data set comes from ",
              tags$a("UCI Machine Learning Repository", href = "https://archive.ics.uci.edu/dataset/2/adult")),
@@ -36,6 +30,9 @@ fluidPage(
              tags$b("Modeling"),
              " tab."),
       tags$p("The original data set contains the following information:"),
+
+## Table -------------------------------------------------------------------
+
       tags$table(
         style = "width:100%",
         style = "text-align: center",
@@ -115,17 +112,21 @@ fluidPage(
           tags$td("Income"),
           tags$td(">50K, <=50K."))
         ), 
-      #closing table
+
+## closing table and summary ------------------------------------------------
+
       tags$br(),
       tags$p("Since fnlwgt is not relevent to this study, while education and relationship have similar infomation with education_num and marital_status, I removed these three variables from the dataset."),
       tags$p("Moreover, I created a variable 'Native' indicating whether the worder's native country was United States or not to replace the native_country variable.")
     ), 
     #closing tab panel
-    
-    # Data Exploration Tab
+
+# Data Exploration Tab ---------------------------------------------------------------
     tabPanel(
       "Data Exploration",
       sidebarLayout(
+
+## sidebar panel -----------------------------------------------------------
         sidebarPanel(
           
           # Four type of plots
@@ -163,14 +164,11 @@ fluidPage(
           # histogram - row filter on income
           conditionalPanel( 
             condition =  "input.plottype == 'hist'",
-            selectizeInput(inputId = "hist_cat_income", 
-                           label = "filter the income level", 
-                           selected = "<= 50K", 
-                           choices = levels(as.factor(adult$income)))
-            # selectInput("hist_cat_income",
-            #             "filter the income level",
-            #             c("<= 50K" = "<= 50K",
-            #               ">50K" = ">50K"))
+            selectInput(inputId = "hist_cat_income", 
+                        label = "filter the income level", 
+                        selected = "<= 50K", 
+                        choices = c("<=50K",
+                                       ">50K"))
           ),
           
           conditionalPanel(
@@ -180,6 +178,12 @@ fluidPage(
                         min = 1, 
                         max = 50, 
                         value = 10)
+          ),
+          
+          conditionalPanel(
+            condition = "input.plottype == 'hist'",
+            checkboxInput(inputId = "center",
+                          label = "Use median instead of mean as center")
           ),
           
           # bar plot - categorical var
@@ -268,35 +272,39 @@ fluidPage(
                           "Gender" = "sex",
                           "Native or International" =  "Native",
                           "Income Category" = "income"))
-          ),
-          
+          )
         ), 
         #closing data exploration sidebarpanel
-        
+
+## main panel --------------------------------------------------------------
+
         # Show a plot of the generated distribution
         mainPanel(
           tags$br(),
-          textOutput("datainfo"),
+          uiOutput("datainfo"),
           tags$br(),
           plotOutput("dataplot")
           
         ) 
         # closing data exploration mainpanel
-        
-      ) 
+
+## closing this tab --------------------------------------------------------
+
+      )
       # closing data exploration sidebarlayout
-      
   ), 
   # closing data exploration tabpanel
   
-  
-    # Modeling Tab
+
+# Modeling Tab ------------------------------------------------------------
+
     tabPanel(
       "Modeling",
       # Sub tabs
       tabsetPanel(
-        
-        # sub tab 1: Modeling Info
+
+## Modeling subpanel 1: info -----------------------------------------------
+
         tabPanel(
           "Modeling Info",
           tags$h3("Logistic Regression"),
@@ -382,30 +390,225 @@ fluidPage(
           )
           
         ),
-        # sub tab 2: Model Fitting
+
+## Modeling subpanel 2: fitting model --------------------------------------
+
         tabPanel(
-          "Model Fitting"
-        ),
-        
-        # sub tab 3: Prediction
+          "Model Fitting",
+          sidebarLayout(
+            # sidebar panel
+            sidebarPanel(
+              
+              selectInput(inputId = "split",
+                          label = "Train/test data split:",
+                          choices = c("90/10" = 0.9,
+                                      "80/20" = 0.8,
+                                      "70/30" = 0.7),
+                          selected = 0.8),
+              
+              selectInput(inputId = "vars",
+                          label = "Choose the predictor variables that you want to put in the model:",
+                          choices = c("age",
+                                      "workclass",
+                                      "education_num",
+                                      "marital_status",
+                                      "occupation",
+                                      "race",
+                                      "sex",
+                                      "capital_gain",
+                                      "capital_loss",
+                                      "hours_per_week",
+                                      "Native"),
+                          multiple = TRUE,
+                          selected = c("age",
+                                       "workclass",
+                                       "education_num",
+                                       "marital_status",
+                                       "occupation",
+                                       "race",
+                                       "sex",
+                                       "capital_gain",
+                                       "capital_loss",
+                                       "hours_per_week",
+                                       "Native")
+                          ),
+              
+              sliderInput(inputId = "tuning",
+                            label = "Number of variables randomly sampled as candidates at each split:",
+                            min = 1,
+                            max = 11,
+                            value = c(1,8)),
+
+              numericInput(inputId = "cv_num",
+                             label = "Number of folds in cross validation",
+                             value = 5),
+            
+              actionButton(inputId = "submit",
+                             label = "Build the model")
+              
+            ),
+            
+            # main panel
+            mainPanel(
+              tags$br(),
+              tags$p("Notice: It would take a couple of minutes to run the models, please be patient."),
+              tags$br(),
+              tags$p("The result of the logistic regression model is:"),
+              verbatimTextOutput("logistic"),
+              tags$br(),
+              tags$p("The result of the random forest model is:"),
+              verbatimTextOutput("rf"),
+              tags$p("The accuracy over selected predictors of random forest regression model is:"),
+              plotOutput("rf_plot"),
+              # verbatimTextOutput("randomforest"),
+              tags$br(),
+              tags$p("Accuracy is used as matric to measure the performance of the model."),
+              tags$p("The accuracy of logistic regression model on the test dataset is "),
+              textOutput("cm_log"),
+              tags$p("The accuracy of random forest model on the test dataset is "),
+              textOutput("cm_rf")
+            )
+            
+          ) # closing sidebarlayout
+        ), # closing model fitting tabpanel
+
+
+## Modeling subpanel 3: prediction -----------------------------------------
+
         tabPanel(
-          "Prediction"
-        )
-      )
-      # sidebarLayout(
-      #   sidebarPanel(
-      #     select
-      #     
-      #   ), #closing modeling sidebarpanel
-      #   
-      #   mainPanel(
-      #     
-      #   ) # closing modeling mainpanel
-      # ) # closing modeling sidebarlayout
-    ) # closing modeling tabpanel
-    
-)#closing tabsetpanel
+          "Prediction",
+          sidebarLayout(
+            # sidebar panel
+            sidebarPanel(
+              sliderInput(inputId = "age",
+                          label = "age",
+                          min = 17,
+                          max = 90,
+                          value = 34),
+              
+              sliderInput(inputId = "education_num",
+                          label = "years of education",
+                          min = 1,
+                          max = 16,
+                          value = 12),
+              
+              sliderInput(inputId = "capital_gain",
+                          label = "capital gain",
+                          min = 0,
+                          max = 99999,
+                          value = 0),
+              
+              sliderInput(inputId = "capital_loss",
+                          label = "capital loss",
+                          min = 0,
+                          max = 4400,
+                          value = 0),
+              
+              sliderInput(inputId = "hours_per_week",
+                          label = "Working hours per week",
+                          min = 1,
+                          max = 99,
+                          value = 40),
+              
+              radioButtons(inputId = "workclass",
+                           label = "work class",
+                           choices = c("Federal-gov",
+                                       "Local-gov",
+                                       "Never-worked",
+                                       "Private",
+                                       "Self-emp-inc",
+                                       "Self-emp-not-inc",
+                                       "State-gov",
+                                       "Unknown",
+                                       "Without-pay"),
+                           selected = "Local-gov"
+                           ),
+              
+              radioButtons(inputId = "marital_status",
+                           label = "marital status",
+                           choices = c("Divorced",
+                                       "Married-AF-spouse",
+                                       "Married-civ-spouse",
+                                       "Married-spouse-absent",
+                                       "Never-married",
+                                       "Separated",
+                                       "Widowed" ),
+                           selected = "Married-AF-spouse"
+                           ),
+              
+              radioButtons(inputId = "occupation",
+                           label = "occupation",
+                           choices = c("Adm-clerical",      
+                                       "Armed-Forces",      
+                                       "Craft-repair",      
+                                       "Exec-managerial",   
+                                       "Farming-fishing",   
+                                       "Handlers-cleaners", 
+                                       "Machine-op-inspct",
+                                       "Other-service",     
+                                       "Priv-house-serv",   
+                                       "Prof-specialty",    
+                                       "Protective-serv",   
+                                       "Sales",            
+                                       "Tech-support",      
+                                       "Transport-moving",
+                                       "Unknown"),
+                           selected = "Sales"
+                
+              ),
+              
+              radioButtons(inputId = "race",
+                           label = "race",
+                           choices = c("Amer-Indian-Eskimo", 
+                                       "Asian-Pac-Islander", 
+                                       "Black",              
+                                       "Other",              
+                                       "White"),
+                           selected = "White"
+                           
+              ),
+              
+              radioButtons(inputId = "sex",
+                           label = "sex",
+                           choices = c("Female", 
+                                       "Male"),
+                           selected = "Male"
+                           
+              ),
+              
+              radioButtons(inputId = "native",
+                           label = "native American worker",
+                           choices = c("Yes" = "Y", 
+                                       "No" = "N"),
+                           selected = "Y"
+                           
+              ),
+              
+              actionButton(inputId = "predict",
+                           label = "Predict it")
+              
+            ),
+            
+            mainPanel(
+              
+              tags$p("The predicted category from logistic regression model is:"),
+              verbatimTextOutput("log_result"),
+              tags$br(),
+              tags$p("The predicted category from random forest model is:"),
+              verbatimTextOutput("rf_result"),
+              tags$br(),
+              tags$p("1 means <=50K and 2 means >50K")
+            )
+          )
+        ) # closing prediction tabpanel
 
-)  
+## Closing sub panels and modeling panel----------------------------------------------------------------
 
+      ) # closing modeling tabsetpanel
 
+    ) # closing modeling panel 
+
+# Ends --------------------------------------------------------------------
+
+  ) # closing top level tabsetpanel
+) # closing page setting
