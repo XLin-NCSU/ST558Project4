@@ -81,7 +81,7 @@ shinyServer(function(input, output, session) {
       var <- paste(input$vars, collapse = " + ")
       form <- as.formula(paste0("income ~", var))
       
-      withProgress(message = 'Building models...', value = 0,{
+      withProgress(message = 'Building models...',{
       logistic_model <- train(form,
                               data = adult_train, 
                               method = "glm",
